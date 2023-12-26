@@ -3,8 +3,9 @@ import { corsMiddleware } from './cors';
 import { errorHandlers } from './errors/handlers';
 import { logger } from './logger';
 import { resources } from './resources';
+import { config } from './config';
 
-const PORT = 8080;
+const PORT = config.port;
 const app = express();
 
 app

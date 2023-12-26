@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import { UserModel } from "../models/user-model";
 import { privateKey, publicKey } from "../keys/jwt";
 import { z } from "zod";
+import { config } from "../config";
 
 export const userPayloadSchema = z.object({
   id: z.number(),
@@ -14,6 +15,9 @@ export const userPayloadSchema = z.object({
 export type UserPayload = z.infer<typeof userPayloadSchema>;
 
 export class JWTService {
+  readonly ISSUER = config.jwt.issuer;
+  readonly LIFESPAN = config.jwt.lifespan;
+
   tokenOf(user: UserModel): string {
     const payload = {
       id: user.id,
@@ -22,15 +26,15 @@ export class JWTService {
     } satisfies UserPayload;
 
     return jwt.sign(payload, privateKey, {
-      issuer: 'simple-express-api',
-      expiresIn: '5m',
+      issuer: this.ISSUER,
+      expiresIn: this.LIFESPAN,
       algorithm: 'RS256'
     });
   }
 
   verify(token: string): UserPayload {
     const payload = jwt.verify(token.replace('Bearer ', ''), publicKey, {
-      issuer: 'simple-express-api',
+      issuer: this.ISSUER,
     });
 
     return userPayloadSchema.parse(payload);

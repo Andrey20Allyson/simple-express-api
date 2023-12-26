@@ -1,0 +1,15 @@
+port: 8080
+
+jwt: 
+  keys: auto
+  issuer: "simple-express-api"
+  lifespan: 5m
+
+log: 
+  errors: false
+
+cors: 
+  allowed: 
+    headers: 
+      - "Content-Type"
+      - "Authorization"

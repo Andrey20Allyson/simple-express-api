@@ -4,6 +4,7 @@ import { WebApplicationError } from "./web-error";
 import { JsonWebTokenError } from "jsonwebtoken";
 import { logger } from "../logger";
 import { serialize } from "v8";
+import { config } from "../config";
 
 export function webAppErrorHandler(): e.ErrorRequestHandler {
   return (err, _, res, next) => {
@@ -78,10 +79,15 @@ function getMessage(err: unknown) {
   return serialize(err).toString('utf-8');
 }
 
-export const errorHandlers: e.ErrorRequestHandler[] = [
-  errorLogger(),
+export const errorHandlers: e.ErrorRequestHandler[] = [];
+
+if (config.log.errors) {
+  errorHandlers.push(errorLogger());
+}
+
+errorHandlers.push(
   webAppErrorHandler(),
   validationErrorHandler(),
   jwtErrorHandler(),
   unknowError(),
-];
+);
