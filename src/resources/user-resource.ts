@@ -7,11 +7,14 @@ export const userResource = resource((router, config) => {
 
   config.path = '/users';
 
-  router.get('/', (_, res) => {
-    const users = service.getAll();
+  router.get('/',
+    authorized(),
+    (_, res) => {
+      const users = service.getAll();
 
-    res.json(users);
-  });
+      res.json(users);
+    }
+  );
 
   router.get('/:id',
     authorized({ roles: ['user'] }),

@@ -22,13 +22,15 @@ export class AuthService {
   }
 
   signUp(data: SignUpRequestDTO): string {
-    
-
     const passwordHash = bcrypt.hashSync(data.password);
 
     const model = new UserModel(
       data.name,
-      new Date(),
+      new Date(
+        data.birthDate.year,
+        data.birthDate.month,
+        data.birthDate.day,
+      ),
       data.login,
       passwordHash,
       ['user'],
