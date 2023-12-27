@@ -10,7 +10,7 @@ const app = express();
 
 app
   .use(corsMiddleware)
-  .use(express.json())
+  .use(express.json({ strict: true }))
   .use(resources)
   .use(errorHandlers)
   .listen(PORT, handleServerStart);
