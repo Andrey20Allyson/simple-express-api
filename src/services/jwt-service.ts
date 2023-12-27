@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { UserModel } from "../models/user-model";
+import { User } from "@prisma/client";
 import { privateKey, publicKey } from "../keys/jwt";
 import { z } from "zod";
 import { config } from "../config";
@@ -18,11 +18,11 @@ export class JWTService {
   readonly ISSUER = config.jwt.issuer;
   readonly LIFESPAN = config.jwt.lifespan;
 
-  tokenOf(user: UserModel): string {
+  tokenOf(user: User): string {
     const payload = {
       id: user.id,
       name: user.name,
-      roles: user.roles,
+      roles: user.roles.split(';'),
     } satisfies UserPayload;
 
     return jwt.sign(payload, privateKey, {

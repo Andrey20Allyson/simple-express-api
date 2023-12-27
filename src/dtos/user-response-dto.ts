@@ -1,4 +1,4 @@
-import { UserModel } from "../models/user-model";
+import { User } from "@prisma/client";
 
 export class UserResponseDTO {
   constructor(
@@ -22,7 +22,7 @@ export class UserResponseDTO {
     return yearDiff - 1;
   }
 
-  static from(model: UserModel) {
+  static from(model: User) {
     return new this(
       model.name,
       this.calculateAge(model.birthDate),
