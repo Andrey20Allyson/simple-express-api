@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const birthDateSchema = z.object({
+export const dateSchema = z.object({
   year: z.number(),
   month: z.number(),
   day: z.number(),
