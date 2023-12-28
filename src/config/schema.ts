@@ -9,6 +9,10 @@ export const configSchema = z.object({
     errors: z
       .boolean()
       .default(false),
+    
+    start: z
+      .boolean()
+      .default(false),
 
   }).default({}),
 

@@ -15,5 +15,7 @@ app
   .listen(config.port, handleServerStart);
 
 function handleServerStart() {
-  logger.log('SERVER', `escutando http://localhost:${config.port}!`);
+  if (config.log.start) {
+    logger.log('SERVER', `escutando http://localhost:${config.port}!`);
+  }
 }

@@ -7,6 +7,7 @@ jwt:
 
 log:
   errors: false
+  start: true
 
 cors:
   allowed:
