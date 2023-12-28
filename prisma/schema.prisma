@@ -32,10 +32,10 @@ model Post {
 }
 
 model PostVote {
-  id     Int  @id @default(autoincrement())
-  type   Int
+  id      Int  @id @default(autoincrement())
+  type    Int
   ownerId Int
-  postId Int
-  post   Post @relation(fields: [postId], references: [id])
+  postId  Int
+  post    Post @relation(fields: [postId], references: [id])
   owner   User @relation(fields: [ownerId], references: [id])
 }

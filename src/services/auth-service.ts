@@ -1,9 +1,14 @@
 import bcrypt from 'bcryptjs';
-import { SignInRequestDTO } from "../dtos/sign-in-request-dto";
-import { SignUpRequestDTO } from "../dtos/sign-up-request-dto";
+import { SignInRequestDTO } from "../dtos/request/sign-in";
+import { SignUpRequestDTO } from "../dtos/request/sign-up";
 import { UnauthorizedError } from "../errors/unauthorized";
 import { UserInit, UserRepository } from "../repositories/user-repository";
 import { JWTService } from "./jwt-service";
+
+export interface IAuthService {
+  signIn(data: SignInRequestDTO): Promise<string>;
+  signUp(data: SignUpRequestDTO): Promise<string>;
+} 
 
 export class AuthService {
   readonly jwtService: JWTService = new JWTService();

@@ -1,8 +1,12 @@
-import e from "express";
-import { authResource } from "./auth-resource";
-import { userResource } from "./user-resource";
+import { AuthResource } from "./auth-resource";
+import { HandlerBuilderClass, resource } from "./base/factory";
+import { PostResource } from "./post-resource";
+import { UserResource } from "./user-resource";
 
-export const resources: e.RequestHandler[] = [
-  authResource,
-  userResource,
+const builders: HandlerBuilderClass[] = [
+  AuthResource,
+  UserResource,
+  PostResource,
 ];
+
+export const resources = builders.map(Builder => resource.from(Builder));

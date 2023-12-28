@@ -1,28 +1,47 @@
+import { Router } from "express";
 import { authorized } from "../auth/middlewares";
-import { UserService } from "../services/user-service";
-import { resource } from "./factory";
+import { IUserService, UserService } from "../services/user-service";
+import { HandlerBuilder, ResourceConfig, resource } from "./base/factory";
+import { IResponse } from "./base/response";
+import { UserResponseDTO } from "../dtos/response/user";
 
-export const userResource = resource((router, config) => {
-  const service = new UserService();
+export interface UserResourceOptions {
+  userService?: IUserService;
+}
 
-  config.path = '/users';
+export class UserResource implements HandlerBuilder {
+  private userService: IUserService;
 
-  router.get('/',
-    authorized(),
-    (_, res) => {
-      const users = service.getAll();
+  constructor(options: UserResourceOptions = {}) {
+    this.userService = options.userService ?? new UserService();
+  }
 
-      res.json(users);
-    }
-  );
+  async get(id: number, res: IResponse<UserResponseDTO>) {
+    const user = await this.userService.get(id);
 
-  router.get('/:id',
-    authorized({ roles: ['user'] }),
-    (req, res) => {
-      const id = Number(req.params.id);
-      const user = service.get(id);
+    res.json(user);
+  }
 
-      res.json(user);
-    }
-  );
-});
+  async list(res: IResponse<UserResponseDTO[]>) {
+    const users = await this.userService.list();
+
+    res.json(users);
+  }
+
+  build(router: Router, config: ResourceConfig): void {
+    config.path = '/users';
+
+    router.get('/',
+      authorized(),
+      (_, res) => this.list(res),
+    );
+
+    router.get('/:id',
+      authorized({ roles: ['user'] }),
+      (req, res) => this.get(
+        Number(req.params.id),
+        res
+      ),
+    );
+  }
+}

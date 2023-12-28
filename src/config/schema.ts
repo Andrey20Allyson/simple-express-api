@@ -18,7 +18,7 @@ export const configSchema = z.object({
       .default('simple-express-api'),
 
     keys: z
-      .string()
+      .enum(['auto', 'read'])
       .default('auto'),
 
     lifespan: z

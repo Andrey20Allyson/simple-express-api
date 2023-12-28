@@ -1,7 +1,7 @@
 port: 8080
 
 jwt:
-  keys: auto
+  keys: read
   issuer: "simple-express-api"
   lifespan: 5m
 

@@ -1,47 +1,66 @@
+import e from "express";
 import { authorized } from "../auth/middlewares";
 import { JWTInfo } from "../auth/request-jwt";
-import { SignInRequestDTO } from "../dtos/sign-in-request-dto";
-import { SignUpRequestDTO } from "../dtos/sign-up-request-dto";
-import { AuthService } from "../services/auth-service";
-import { UserService } from "../services/user-service";
+import { SignInRequestDTO } from "../dtos/request/sign-in";
+import { SignUpRequestDTO } from "../dtos/request/sign-up";
+import { UserResponseDTO } from "../dtos/response/user";
+import { AuthService, IAuthService } from "../services/auth-service";
+import { IUserService, UserService } from "../services/user-service";
 import { valid } from "../validation/middlewares";
-import { resource } from "./factory";
+import { HandlerBuilder, ResourceConfig } from "./base/factory";
+import { IResponse } from "./base/response";
 
-export const authResource = resource((router, config) => {
-  const authService = new AuthService();
-  const userService = new UserService();
+export interface AuthResourceOptions {
+  userService?: IUserService;
+  authService?: IAuthService;
+}
 
-  config.path = '/auth';
+export class AuthResource implements HandlerBuilder {
+  private userService: IUserService;
+  private authService: IAuthService;
 
-  router.get('/',
-    authorized(),
-    (req, res) => {
-      const jwt = new JWTInfo(req);
+  constructor(options: AuthResourceOptions = {}) {
+    this.userService = options.userService ?? new UserService();
+    this.authService = options.authService ?? new AuthService();
+  }
 
-      const { id } = jwt.payload();
-      const user = userService.get(id);
+  async getInfo(jwt: JWTInfo, res: IResponse<UserResponseDTO>) {
+    const { id } = jwt.payload();
+    const user = await this.userService.get(id);
 
-      return res.json(user);
-    }
-  );
+    return res.json(user);
+  }
 
-  router.post('/sign-in',
-    valid(SignInRequestDTO),
-    (req, res) => {
-      const token = authService.signIn(req.body);
+  async signIn(data: SignInRequestDTO, res: IResponse) {
+    const token = await this.authService.signIn(data);
 
-      res.send(token);
-    }
-  );
+    res.send(token);
+  }
 
-  router.post('/sign-up',
-    valid(SignUpRequestDTO),
-    (req, res) => {
-      const token = authService.signUp(req.body);
+  async signUp(data: SignUpRequestDTO, res: IResponse) {
+    const token = await this.authService.signUp(data);
 
-      res
-        .status(201)
-        .send(token);
-    }
-  );
-});
+    res
+      .status(201)
+      .send(token);
+  }
+
+  build(router: e.Router, config: ResourceConfig): void {
+    config.path = '/auth';
+
+    router.get('/',
+      authorized(),
+      (req, res) => this.getInfo(new JWTInfo(req), res),
+    );
+
+    router.get('/sign-in',
+      valid(SignInRequestDTO),
+      (req, res) => this.signIn(req.body, res),
+    );
+
+    router.get('/sign-up',
+      valid(SignUpRequestDTO),
+      (req, res) => this.signUp(req.body, res),
+    );
+  }
+}

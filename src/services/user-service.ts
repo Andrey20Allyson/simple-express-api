@@ -1,9 +1,9 @@
-import { UserResponseDTO } from "../dtos/user-response-dto";
+import { UserResponseDTO } from "../dtos/response/user";
 import { NotFoundError } from "../errors/not-found";
 import { IUserRepository, UserRepository } from "../repositories/user-repository";
 
 export interface IUserService {
-  getAll(): Promise<UserResponseDTO[]>;
+  list(): Promise<UserResponseDTO[]>;
   get(id: number): Promise<UserResponseDTO>;
 }
 
@@ -18,7 +18,7 @@ export class UserService implements IUserService {
     this.userRepository = options.userRepository ?? new UserRepository();
   }
 
-  async getAll(): Promise<UserResponseDTO[]> {
+  async list(): Promise<UserResponseDTO[]> {
     const users = await this.userRepository.list();
 
     return users.map(user => UserResponseDTO.from(user));
