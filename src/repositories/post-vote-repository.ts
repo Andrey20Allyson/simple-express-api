@@ -1,8 +1,16 @@
 import { PostVote, PrismaClient } from "@prisma/client"
 import { ModelInitType, prisma } from "../prisma";
 
+export enum PostVoteType {
+  DOWN_VOTE = 1,
+  UP_VOTE,
+}
+
 export interface IPostVoteRepository {
-  
+  listByPost(postId: number): Promise<PostVote[]>;
+  listByAuthor(authorId: number): Promise<PostVote[]>;
+  persist(postVote: PostVoteInit): Promise<PostVote>;
+  countByPost(postId: number, type?: PostVoteType): Promise<number>;
 }
 
 export type PostVoteCRUD = PrismaClient['postVote'];
@@ -12,7 +20,7 @@ export interface PostVoteRepositoryOptions {
   crud?: PostVoteCRUD;
 }
 
-export class PostVoteRepository {
+export class PostVoteRepository implements IPostVoteRepository {
   crud: PostVoteCRUD;
 
   constructor(options: PostVoteRepositoryOptions = {}) {
@@ -37,7 +45,20 @@ export class PostVoteRepository {
     });
   }
 
+  countByPost(postId: number, type?: PostVoteType): Promise<number> {
+    return this.crud.count({
+      where: {
+        postId,
+        type
+      },
+    });
+  }
+
   persist(postVote: PostVoteInit): Promise<PostVote> {
     return this.crud.create({ data: postVote });
+  }
+
+  delete(id: number): Promise<PostVote> {
+    return this.crud.delete({ where: { id } });
   }
 }

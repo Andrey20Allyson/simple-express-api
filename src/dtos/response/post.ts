@@ -4,14 +4,14 @@ export class PostResponseDTO {
   constructor(
     readonly title: String,
     readonly content: String,
-    readonly vote: number,
+    readonly authorId: number,
   ) { }
 
-  static from(post: Post, vote: number) {
+  static from(post: Post) {
     return new PostResponseDTO(
       post.title,
       post.content,
-      vote,
+      post.authorId,
     );
   }
 }

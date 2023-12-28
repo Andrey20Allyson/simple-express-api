@@ -4,11 +4,15 @@ import { ModelInitType, prisma } from "../prisma";
 export type PostCRUD = PrismaClient['post'];
 export type PostInit = ModelInitType<PostCRUD>;
 
+export interface ListPostOptions {
+  authorId?: number;
+}
+
 export interface IPostRepository {
   findById(id: number): Promise<Post | null>;
-  listByAuthor(userId: number): Promise<Post[]>;
-  list(): Promise<Post[]>;
+  list(options?: ListPostOptions): Promise<Post[]>;
   persist(post: PostInit): Promise<Post>;
+  delete(id: number): Promise<Post>;
 }
 
 export interface PostRepositoryOptions {
@@ -26,19 +30,19 @@ export class PostRepository implements IPostRepository {
     return this.crud.findUnique({ where: { id } });
   }
 
-  listByAuthor(authorId: number): Promise<Post[]> {
+  list(options: ListPostOptions = {}): Promise<Post[]> {
     return this.crud.findMany({
       where: {
-        authorId,
-      },
+        authorId: options.authorId,
+      }
     });
-  }
-
-  list(): Promise<Post[]> {
-    return this.crud.findMany();
   }
 
   persist(post: PostInit): Promise<Post> {
     return this.crud.create({ data: post });
+  }
+
+  delete(id: number): Promise<Post> {
+    return this.crud.delete({ where: { id } });
   }
 }

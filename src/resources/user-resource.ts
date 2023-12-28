@@ -1,9 +1,10 @@
 import { Router } from "express";
 import { authorized } from "../auth/middlewares";
-import { IUserService, UserService } from "../services/user-service";
-import { HandlerBuilder, ResourceConfig, resource } from "./base/factory";
-import { IResponse } from "./base/response";
 import { UserResponseDTO } from "../dtos/response/user";
+import { IUserService, UserService } from "../services/user-service";
+import { validNumber } from "../validation/number";
+import { HandlerBuilder, ResourceConfig } from "./base/factory";
+import { IResponse } from "./base/response";
 
 export interface UserResourceOptions {
   userService?: IUserService;
@@ -39,7 +40,7 @@ export class UserResource implements HandlerBuilder {
     router.get('/:id',
       authorized({ roles: ['user'] }),
       (req, res) => this.get(
-        Number(req.params.id),
+        validNumber.parse(req.params.id),
         res
       ),
     );

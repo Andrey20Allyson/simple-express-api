@@ -15,8 +15,8 @@ export const userPayloadSchema = z.object({
 export type UserPayload = z.infer<typeof userPayloadSchema>;
 
 export class JWTService {
-  readonly ISSUER = config.jwt.issuer;
-  readonly LIFESPAN = config.jwt.lifespan;
+  private issuer = config.jwt.issuer;
+  private tokenLifespan = config.jwt.lifespan;
 
   tokenOf(user: User): string {
     const payload = {
@@ -26,15 +26,15 @@ export class JWTService {
     } satisfies UserPayload;
 
     return jwt.sign(payload, privateKey, {
-      issuer: this.ISSUER,
-      expiresIn: this.LIFESPAN,
+      issuer: this.issuer,
+      expiresIn: this.tokenLifespan,
       algorithm: 'RS256'
     });
   }
 
   verify(token: string): UserPayload {
     const payload = jwt.verify(token.replace('Bearer ', ''), publicKey, {
-      issuer: this.ISSUER,
+      issuer: this.issuer,
     });
 
     return userPayloadSchema.parse(payload);
