@@ -54,41 +54,33 @@ export class PostResource implements HandlerBuilder {
   build(router: Router, config: ResourceConfig): void {
     config.path = '/posts';
 
-    router.get('/:id', asyncHandler((req, res) => this.get(
+    router.get('/:id', (req, res) => this.get(
       validNumber.parse(req.params.id),
       res,
-    )));
+    ));
 
     router.get('/',
       valid.query(ListPostQuery),
-      asyncHandler((req, res) => this.list(req.query, res)),
+      (req, res) => this.list(req.query, res),
     );
 
     router.post('/',
       authorized(),
       valid(PostCreateDTO),
-      asyncHandler((req, res) => this.create(
+      (req, res) => this.create(
         req.body,
         new JWTInfo(req),
         res,
-      )),
+      ),
     );
 
     router.delete('/:id',
       authorized(),
-      asyncHandler((req, res) => this.delete(
+      (req, res) => this.delete(
         validNumber.parse(req.params.id),
         new JWTInfo(req),
         res,
-      )),
+      ),
     );
   }
-}
-
-function asyncHandler(handler: e.RequestHandler): e.RequestHandler {
-  return (req, res, next) => {
-    Promise
-      .resolve(handler(req, res, next))
-      .catch(next);
-  };
 }
