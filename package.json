@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest",
     "dev": "tsx watch src --tsconfig tsconfig.json",
     "clear": "node scripts/clear.js",
     "build": "npm run clear && tsc"
@@ -31,6 +31,7 @@
     "@types/node": "^20.10.5",
     "prisma": "^5.7.1",
     "tsx": "^4.7.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vitest": "^1.1.0"
   }
 }

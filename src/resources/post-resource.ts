@@ -1,4 +1,4 @@
-import e, { Router } from "express";
+import { Router } from "express";
 import { authorized } from "../auth/middlewares";
 import { JWTInfo } from "../auth/request-jwt";
 import { ListPostQuery } from "../dtos/query/list-posts";
