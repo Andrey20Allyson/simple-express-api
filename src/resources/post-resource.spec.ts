@@ -1,45 +1,12 @@
-import { Post } from '@prisma/client';
-import { describe, expect, test } from 'vitest';
-import { PostResponseDTO } from '../dtos/response/post';
-import { IPostRepository, ListPostOptions, PostInit } from '../repositories/post-repository';
+import { describe, test } from 'vitest';
+import { PostInit } from '../repositories/post-repository';
 import { PostService } from '../services/post-service';
-import { ResponseMock } from '../testing/response.mock';
-import { IResponse } from './base/response';
+import { PostRepositoryMock } from '../testing/post-repository.mock';
 import { PostResource } from './post-resource';
-import { WebApplicationError } from '../errors/web-error';
-
-class PostRepositoryMock implements IPostRepository {
-  data: Post[] = [];
-  idCount = 1;
-
-  async findById(id: number): Promise<Post | null> {
-    return this.data.find(post => post.id === id) ?? null;
-  }
-
-  async list(options?: ListPostOptions): Promise<Post[]> {
-    return Array.from(this.data);
-  }
-
-  async persist(post: PostInit): Promise<Post> {
-    const createdPost: Post = {
-      authorId: post.authorId ?? 0,
-      content: post.content,
-      id: this.idCount++,
-      title: post.title,
-    };
-
-    this.data.push(createdPost);
-
-    return createdPost;
-  }
-
-  async delete(id: number): Promise<Post> {
-    const idx = this.data.findIndex(post => post.id === id);
-    const [post] = this.data.splice(idx, 1);
-
-    return post;
-  }
-}
+import { ResponseAsserter } from '../testing/response-asserter';
+import { Tester } from '../testing/tester';
+import { JWTInfo } from '../auth/request-jwt';
+import { randomInt } from 'crypto';
 
 function mockPostResource() {
   const repository = new PostRepositoryMock();
@@ -49,51 +16,128 @@ function mockPostResource() {
   return { repository, service, resource };
 }
 
-function handleError(resp: IResponse) {
-  return (err: unknown) => {
-    if (err instanceof WebApplicationError) {
-      resp.status(err.status).send(err.message);
-
-      return;
-    }
-
-    resp.status(500);
-  }
-}
-
 describe(PostResource, () => {
   describe(PostResource.prototype.get, () => {
     test(`Shold response 404 status code if post don't exists`, async () => {
       const { resource } = mockPostResource();
-      const resp = ResponseMock.create<PostResponseDTO>();
 
-      await resource.get(1, resp)
-        .catch(handleError(resp));
-
-      expect(resp.getStatus())
-        .toBe(404);
+      await ResponseAsserter
+        .from(resp => resource.get(1, resp))
+        .expectStatus(404)
+        .result();
     });
 
     test(`Shold response with 200 status code and the post if post exists`, async () => {
       const { repository, resource } = mockPostResource();
-      const resp = ResponseMock.create<PostResponseDTO>();
 
       const post = await repository.persist({ content: 'N/A', title: 'post test', authorId: 1 });
 
-      await resource.get(post.id, resp)
-        .catch(handleError(resp));
+      await ResponseAsserter
+        .from(resp => resource.get(post.id, resp))
+        .expectStatus(200)
+        .expectBody([], Tester.exists())
+        .result();
+    });
+  });
 
-      expect(resp.getStatus())
-        .toBe(200);
+  describe(PostResource.prototype.list, () => {
+    test(`Shold filter posts by authorId query param`, async () => {
+      const { resource, repository } = mockPostResource();
 
-      const postResponse = resp.getBody();
-      if (typeof postResponse === 'object') {
-        expect(postResponse.authorId)
-          .toBe(post.id);
-          
-      } else {
-        expect.fail('Incorrect response media type');
-      }
+      const postInits: PostInit[] = [
+        { content: 'post text...', title: 'post of author 1', authorId: 1 },
+        { content: 'post text...', title: 'post of author 2', authorId: 2 },
+        { content: 'post text...', title: 'post of author 2', authorId: 2 },
+        { content: 'post text...', title: 'post of author 3', authorId: 3 },
+        { content: 'post text...', title: 'post of author 3', authorId: 3 },
+        { content: 'post text...', title: 'post of author 3', authorId: 3 },
+        { content: 'post text...', title: 'post of author 3', authorId: 3 },
+        { content: 'post text...', title: 'post of author 3', authorId: 3 },
+      ];
+
+      postInits.forEach(postInit => {
+        repository.persist(postInit);
+      });
+
+      const searchAuthorId = 1;
+
+      await ResponseAsserter
+        .from(resp => resource.list({ authorId: searchAuthorId }, resp))
+        .expectStatus(200)
+        .expectBody([0, 'authorId'], Tester.equals(searchAuthorId))
+        .expectBody('length', Tester.equals(1))
+        .result();
+    });
+  });
+
+  describe(PostResource.prototype.delete, async () => {
+    test(`Shold delete the post if auth.roles includes admin`, async () => {
+      const { resource, repository } = mockPostResource();
+
+      const post = await repository.persist({ content: 'post text...', title: 'post 1', authorId: 1 });
+
+      const jwt = new JWTInfo({
+        [JWTInfo.JWT_PAYLOAD]: {
+          id: 2,
+          name: '',
+          roles: ['admin'],
+        }
+      });
+
+      await ResponseAsserter
+        .from(resp => resource.delete(post.id, jwt, resp))
+        .expectStatus(200)
+        .result();
+
+      await ResponseAsserter
+        .from(resp => resource.get(post.id, resp))
+        .expectStatus(404)
+        .result();
+    });
+
+    test(`Shold delete the post if auth.id matches with authorId`, async () => {
+      const { resource, repository } = mockPostResource();
+
+      const authorId = randomInt(255);
+      const post = await repository.persist({ content: 'post text...', title: 'post 1', authorId });
+
+      const jwt = JWTInfo.fromPayload({
+        id: authorId,
+        name: '',
+        roles: ['user'],
+      });
+
+      await ResponseAsserter
+        .from(resp => resource.delete(post.id, jwt, resp))
+        .expectStatus(200)
+        .result();
+
+      await ResponseAsserter
+        .from(resp => resource.get(post.id, resp))
+        .expectStatus(404)
+        .result();
+    });
+
+    test(`Sholdn't delete the post and response with 401 status code if auth.id don't matches with authorId`, async () => {
+      const { resource, repository } = mockPostResource();
+
+      const post = await repository.persist({ content: 'post text...', title: 'post 1', authorId: 1 });
+
+      const jwt = JWTInfo.fromPayload({
+        id: 2,
+        name: '',
+        roles: ['user'],
+      });
+
+      await ResponseAsserter
+        .from(resp => resource.delete(post.id, jwt, resp))
+        .expectStatus(401)
+        .result();
+
+      await ResponseAsserter
+        .from(resp => resource.get(post.id, resp))
+        .expectStatus(200)
+        .result();
     });
   });
 });

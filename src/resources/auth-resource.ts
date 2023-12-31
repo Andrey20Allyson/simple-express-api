@@ -9,6 +9,7 @@ import { IUserService, UserService } from "../services/user-service";
 import { valid } from "../validation/middlewares";
 import { HandlerBuilder, ResourceConfig } from "./base/factory";
 import { IResponse } from "./base/response";
+import { AuthResponseDTO } from "../dtos/response/auth";
 
 export interface AuthResourceOptions {
   userService?: IUserService;
@@ -31,18 +32,18 @@ export class AuthResource implements HandlerBuilder {
     return res.json(user);
   }
 
-  async signIn(data: SignInRequestDTO, res: IResponse) {
+  async signIn(data: SignInRequestDTO, res: IResponse<AuthResponseDTO>) {
     const token = await this.authService.signIn(data);
 
-    res.send(token);
+    res.json(token);
   }
 
-  async signUp(data: SignUpRequestDTO, res: IResponse) {
+  async signUp(data: SignUpRequestDTO, res: IResponse<AuthResponseDTO>) {
     const token = await this.authService.signUp(data);
 
     res
       .status(201)
-      .send(token);
+      .json(token);
   }
 
   build(router: e.Router, config: ResourceConfig): void {

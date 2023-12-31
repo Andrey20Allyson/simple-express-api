@@ -1,13 +1,9 @@
+import { expect } from "vitest";
 import { IResponse } from "../resources/base/response";
 
 export interface ResponseData<T> {
-  body: T | string | null;
+  body: T | null;
   status: number;
-}
-
-export enum MediaType {
-  APPLICATION_JSON = 'application/json',
-  TEXT_PLAIN = 'text/plain',
 }
 
 export class ResponseMock<T extends object> implements IResponse<T> {
@@ -19,15 +15,11 @@ export class ResponseMock<T extends object> implements IResponse<T> {
     return this;
   }
 
-  private setBody(body: T | string): this {
+  private setBody(body: T): this {
     if (this.data.status === -1) this.data.status = 200;
     this.data.body = body;
 
     return this;
-  }
-
-  send(text: string): IResponse<T> {
-    return this.setBody(text);
   }
 
   json(data: T): IResponse<T> {
@@ -38,17 +30,8 @@ export class ResponseMock<T extends object> implements IResponse<T> {
     return this;
   }
 
-  getContentType(): MediaType {
-    switch (typeof this.getBody()) {
-      case 'string':
-        return MediaType.TEXT_PLAIN;
-      case 'object':
-        return MediaType.APPLICATION_JSON;
-    }
-  }
-
   getBody() {
-    return this.data.body ?? '';
+    return this.data.body ?? expect.fail(`Tried to get body data but is null`);
   }
 
   getStatus() {

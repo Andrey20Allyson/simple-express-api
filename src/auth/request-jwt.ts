@@ -5,7 +5,7 @@ export interface JWTContainer {
   [JWTInfo.JWT_PAYLOAD]: UserPayload;
 };
 
-export class JWTInfo {  
+export class JWTInfo {
   static readonly JWT_PAYLOAD = Symbol();
 
   constructor(private readonly container: JWTContainer | {}) { }
@@ -24,5 +24,9 @@ export class JWTInfo {
     container[JWTInfo.JWT_PAYLOAD] = payload;
 
     return this;
+  }
+
+  static fromPayload(payload: UserPayload) {
+    return new this({ [this.JWT_PAYLOAD]: payload });
   }
 }
