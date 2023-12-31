@@ -1,5 +1,5 @@
 import { dateSchema } from "../../validation/birth-date";
-import { DTO, createDTO } from "../../validation/middlewares";
+import { createDTO, DTO } from "../../validation/dto";
 import { notEmpitySchema } from "../../validation/not-empity";
 import { passwordSchema } from "../../validation/password";
 

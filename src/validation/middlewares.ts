@@ -1,17 +1,6 @@
 import e from "express";
-import { ZodRawShape, ZodType, z } from "zod";
-
-export interface ObjectWithSchema<T = any> {
-  schema: ZodType<T>;
-}
-
-export type DTO<O extends ObjectWithSchema<any>> = z.infer<O['schema']>;
-
-export function createDTO<S extends ZodRawShape>(shape: S) {
-  return {
-    schema: z.object(shape),
-  };
-}
+import { ZodType } from "zod";
+import { ObjectWithSchema } from "./dto";
 
 /**
  * Creates a express middleware that validates the request body with `type` schema

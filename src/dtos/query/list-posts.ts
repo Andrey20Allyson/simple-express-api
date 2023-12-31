@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { DTO, createDTO } from "../../validation/middlewares";
+import { createDTO, DTO } from "../../validation/dto";
 
 export const ListPostQuery = createDTO({
   authorId: z
