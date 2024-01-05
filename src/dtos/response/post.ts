@@ -3,8 +3,8 @@ import { Post } from "@prisma/client";
 export class PostResponseDTO {
   constructor(
     readonly id: number,
-    readonly title: String,
-    readonly content: String,
+    readonly title: string,
+    readonly content: string,
     readonly publishedAt: Date,
     readonly authorId: number,
   ) { }
