@@ -2,9 +2,9 @@ import { User } from "@prisma/client";
 
 export class UserResponseDTO {
   constructor(
+    readonly id: number,
     readonly name: string,
     readonly age: number,
-    readonly login: string,
     readonly birthDate: Date,
   ) { }
 
@@ -24,9 +24,9 @@ export class UserResponseDTO {
 
   static from(model: User) {
     return new this(
+      model.id,
       model.name,
       this.calculateAge(model.birthDate),
-      model.login,
       model.birthDate,
     )
   }
