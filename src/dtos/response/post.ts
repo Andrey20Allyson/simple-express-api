@@ -14,7 +14,7 @@ export class PostResponseDTO {
       post.id,
       post.title,
       post.content,
-      new Date(), // TODO add a `createdAt` to db model
+      post.createdAt,
       post.authorId,
     );
   }

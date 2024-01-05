@@ -19,6 +19,7 @@ export class PostRepositoryMock implements IPostRepository {
     const createdPost: Post = {
       authorId: post.authorId ?? 0,
       content: post.content,
+      createdAt: new Date(),
       id: this.idCount++,
       title: post.title,
     };
