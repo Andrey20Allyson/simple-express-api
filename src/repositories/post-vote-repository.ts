@@ -1,16 +1,29 @@
 import { PostVote, PrismaClient } from "@prisma/client"
 import { ModelInitType, prisma } from "../prisma";
 
-export enum PostVoteType {
+export enum PostVoteDBType {
   DOWN_VOTE = 1,
   UP_VOTE,
 }
 
+export interface ListPostVoteByPostOptions {
+  id?: number;
+  authorId?: number;
+}
+
+export interface ListPostVoteOptions {
+  page?: number;
+  pageSize?: number;
+  ownerId?: number;
+  type?: PostVoteDBType;
+  post?: ListPostVoteByPostOptions;
+}
+
 export interface IPostVoteRepository {
-  listByPost(postId: number): Promise<PostVote[]>;
-  listByAuthor(authorId: number): Promise<PostVote[]>;
+  list(options?: ListPostVoteOptions): Promise<PostVote[]>;
   persist(postVote: PostVoteInit): Promise<PostVote>;
-  countByPost(postId: number, type?: PostVoteType): Promise<number>;
+  delete(id: number): Promise<PostVote>;
+  countByPost(postId: number, type?: PostVoteDBType): Promise<number>;
 }
 
 export type PostVoteCRUD = PrismaClient['postVote'];
@@ -18,34 +31,39 @@ export type PostVoteInit = ModelInitType<PostVoteCRUD>;
 
 export interface PostVoteRepositoryOptions {
   crud?: PostVoteCRUD;
+  defaultPageSize?: number;
 }
 
 export class PostVoteRepository implements IPostVoteRepository {
-  crud: PostVoteCRUD;
+  readonly crud: PostVoteCRUD;
+  readonly defaultPageSize: number;
 
   constructor(options: PostVoteRepositoryOptions = {}) {
     this.crud = options.crud ?? prisma.postVote;
+    this.defaultPageSize = options.defaultPageSize ?? 10;
   }
 
-  listByPost(postId: number): Promise<PostVote[]> {
-    return this.crud.findMany({
-      where: {
-        postId,
-      },
-    });
-  }
+  list(options?: ListPostVoteOptions): Promise<PostVote[]> {
+    const pageSize = options?.page !== undefined ? options.pageSize ?? this.defaultPageSize : undefined;
+    const skip = options?.page !== undefined && pageSize !== undefined
+      ? options.page * pageSize
+      : undefined;
 
-  listByAuthor(authorId: number): Promise<PostVote[]> {
     return this.crud.findMany({
       where: {
+        ownerId: options?.ownerId,
         post: {
-          authorId,
-        }
-      }
+          id: options?.post?.id,
+          authorId: options?.post?.authorId,
+        },
+        type: options?.type,
+      },
+      take: pageSize,
+      skip,
     });
   }
 
-  countByPost(postId: number, type?: PostVoteType): Promise<number> {
+  countByPost(postId: number, type?: PostVoteDBType): Promise<number> {
     return this.crud.count({
       where: {
         postId,
